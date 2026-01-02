@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Purchase, Sale, Expense, Customer, JobSheet, Invoice } from '../models';
 
@@ -33,7 +33,9 @@ export class DataService {
   invoices$ = this.invoicesSubject.asObservable();
   suppliers$ = this.suppliersSubject.asObservable();
 
-  constructor() {
+  private backupDebounceTimer: any = null;
+
+  constructor(private injector: Injector) {
     this.loadAllData();
   }
 
@@ -78,6 +80,7 @@ export class DataService {
       const updated = [...current, name].sort();
       this.saveToStorage(this.KEYS.suppliers, updated);
       this.suppliersSubject.next(updated);
+      this.triggerAutoBackup();
     }
   }
 
@@ -85,6 +88,7 @@ export class DataService {
     const filtered = this.suppliersSubject.value.filter(s => s !== name);
     this.saveToStorage(this.KEYS.suppliers, filtered);
     this.suppliersSubject.next(filtered);
+    this.triggerAutoBackup();
   }
 
   // --- Purchases ---
@@ -96,6 +100,7 @@ export class DataService {
     const updated = [p, ...current]; // Add new entry at beginning
     this.saveToStorage(this.KEYS.purchases, updated);
     this.purchasesSubject.next(updated);
+    this.triggerAutoBackup();
   }
 
   updatePurchase(p: Purchase) {
@@ -105,6 +110,7 @@ export class DataService {
       current[index] = p;
       this.saveToStorage(this.KEYS.purchases, [...current]);
       this.purchasesSubject.next([...current]);
+      this.triggerAutoBackup();
     }
   }
 
@@ -112,6 +118,7 @@ export class DataService {
     const filtered = this.purchasesSubject.value.filter(x => x.id !== id);
     this.saveToStorage(this.KEYS.purchases, filtered);
     this.purchasesSubject.next(filtered);
+    this.triggerAutoBackup();
   }
 
   // --- Sales ---
@@ -140,6 +147,7 @@ export class DataService {
     const updated = [s, ...current]; // Add new entry at beginning
     this.saveToStorage(this.KEYS.sales, updated);
     this.salesSubject.next(updated);
+    this.triggerAutoBackup();
   }
 
   updateSale(s: Sale) {
@@ -149,6 +157,7 @@ export class DataService {
       current[index] = s;
       this.saveToStorage(this.KEYS.sales, [...current]);
       this.salesSubject.next([...current]);
+      this.triggerAutoBackup();
     }
   }
 
@@ -156,6 +165,7 @@ export class DataService {
     const filtered = this.salesSubject.value.filter(x => x.id !== id);
     this.saveToStorage(this.KEYS.sales, filtered);
     this.salesSubject.next(filtered);
+    this.triggerAutoBackup();
   }
 
   // --- Expenses ---
@@ -167,6 +177,7 @@ export class DataService {
     const updated = [e, ...current]; // Add new entry at beginning
     this.saveToStorage(this.KEYS.expenses, updated);
     this.expensesSubject.next(updated);
+    this.triggerAutoBackup();
   }
 
   updateExpense(e: Expense) {
@@ -176,6 +187,7 @@ export class DataService {
       current[index] = e;
       this.saveToStorage(this.KEYS.expenses, [...current]);
       this.expensesSubject.next([...current]);
+      this.triggerAutoBackup();
     }
   }
 
@@ -183,6 +195,7 @@ export class DataService {
     const filtered = this.expensesSubject.value.filter(x => x.id !== id);
     this.saveToStorage(this.KEYS.expenses, filtered);
     this.expensesSubject.next(filtered);
+    this.triggerAutoBackup();
   }
 
   // --- Customers ---
@@ -194,6 +207,7 @@ export class DataService {
     const updated = [...current, c];
     this.saveToStorage(this.KEYS.customers, updated);
     this.customersSubject.next(updated);
+    this.triggerAutoBackup();
   }
 
   updateCustomer(c: Customer) {
@@ -203,6 +217,7 @@ export class DataService {
       current[index] = c;
       this.saveToStorage(this.KEYS.customers, [...current]);
       this.customersSubject.next([...current]);
+      this.triggerAutoBackup();
     }
   }
 
@@ -210,6 +225,7 @@ export class DataService {
     const filtered = this.customersSubject.value.filter(x => x.id !== id);
     this.saveToStorage(this.KEYS.customers, filtered);
     this.customersSubject.next(filtered);
+    this.triggerAutoBackup();
   }
 
   // --- Job Sheets ---
@@ -241,6 +257,7 @@ export class DataService {
     const updated = [j, ...current]; // Add at beginning (newest first)
     this.saveToStorage(this.KEYS.jobSheets, updated);
     this.jobSheetsSubject.next(updated);
+    this.triggerAutoBackup();
   }
 
   updateJobSheet(j: JobSheet) {
@@ -251,6 +268,7 @@ export class DataService {
       current[index] = j;
       this.saveToStorage(this.KEYS.jobSheets, [...current]);
       this.jobSheetsSubject.next([...current]);
+      this.triggerAutoBackup();
     }
   }
 
@@ -258,6 +276,7 @@ export class DataService {
     const filtered = this.jobSheetsSubject.value.filter(x => x.id !== id);
     this.saveToStorage(this.KEYS.jobSheets, filtered);
     this.jobSheetsSubject.next(filtered);
+    this.triggerAutoBackup();
   }
 
   // --- Invoices ---
@@ -268,6 +287,7 @@ export class DataService {
     const updated = [inv, ...current]; // Add at beginning (newest first)
     this.saveToStorage(this.KEYS.invoices, updated);
     this.invoicesSubject.next(updated);
+    this.triggerAutoBackup();
   }
 
   updateInvoice(inv: Invoice) {
@@ -277,6 +297,7 @@ export class DataService {
       current[index] = inv;
       this.saveToStorage(this.KEYS.invoices, [...current]);
       this.invoicesSubject.next([...current]);
+      this.triggerAutoBackup();
     }
   }
 
@@ -284,6 +305,7 @@ export class DataService {
     const filtered = this.invoicesSubject.value.filter(x => x.id !== id);
     this.saveToStorage(this.KEYS.invoices, filtered);
     this.invoicesSubject.next(filtered);
+    this.triggerAutoBackup();
   }
 
   // --- Utils ---
@@ -377,5 +399,39 @@ export class DataService {
     this.jobSheetsSubject.next([]);
     this.invoicesSubject.next([]);
     this.suppliersSubject.next([]);
+  }
+
+  // --- Auto Backup to Google Drive ---
+  private triggerAutoBackup() {
+    // Check if auto-backup is enabled
+    if (localStorage.getItem('gdrive_auto_backup') !== 'true') {
+      return;
+    }
+
+    // Debounce: wait 3 seconds after last change before backing up
+    if (this.backupDebounceTimer) {
+      clearTimeout(this.backupDebounceTimer);
+    }
+
+    this.backupDebounceTimer = setTimeout(async () => {
+      try {
+        // Lazy load GDriveService to avoid circular dependency
+        const { GDriveService } = await import('./gdrive.service');
+        const gdriveService = this.injector.get(GDriveService);
+
+        if (gdriveService.isSignedIn()) {
+          const jsonData = this.exportData();
+          const result = await gdriveService.uploadBackup(jsonData);
+          if (result.success) {
+            gdriveService.setLastBackupTime();
+            console.log('Auto-backup completed:', result.message);
+          } else {
+            console.warn('Auto-backup failed:', result.message);
+          }
+        }
+      } catch (error) {
+        console.error('Auto-backup error:', error);
+      }
+    }, 3000);
   }
 }
