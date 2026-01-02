@@ -1,0 +1,40 @@
+<div class="login-container">
+    <div class="login-card fade-in">
+        <div class="login-header">
+            <div class="icon-circle">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h1>Welcome Back</h1>
+            <p>Sign in to your intelligent workspace</p>
+        </div>
+
+        <div class="alert alert-danger" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+        </div>
+
+        <form (ngSubmit)="doLogin()">
+            <div class="input-group">
+                <input type="text" id="username" [(ngModel)]="username" name="username" required placeholder=" "
+                    autocomplete="off">
+                <label for="username"><i class="fas fa-user"></i> Username</label>
+                <div class="input-highlight"></div>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" [(ngModel)]="password" name="password" required placeholder=" "
+                    autocomplete="current-password">
+                <label for="password"><i class="fas fa-lock"></i> Password</label>
+                <div class="input-highlight"></div>
+            </div>
+
+            <button type="submit" class="btn-login" [disabled]="!username || !password">
+                <span>Access Dashboard</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="footer-links">
+            <a href="#">Forgot Password?</a>
+        </div>
+    </div>
+</div>

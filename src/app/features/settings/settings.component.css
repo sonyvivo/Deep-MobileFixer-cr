@@ -1,0 +1,14 @@
+/* Inherit global styles */
+.sections-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 768px) {
+    .sections-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Reusing toast styles from global styles.css */

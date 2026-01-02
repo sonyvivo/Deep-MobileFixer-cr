@@ -1,0 +1,67 @@
+<div class="sections-grid">
+    <!-- Security Settings -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-shield-alt"></i> Security</div>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>Current PIN</label>
+                <input type="password" class="form-control" [(ngModel)]="oldPin" placeholder="Enter current PIN">
+            </div>
+            <div class="form-group">
+                <label>New PIN</label>
+                <input type="number" class="form-control" [(ngModel)]="newPin" placeholder="Enter 4-digit PIN">
+            </div>
+            <button class="btn btn-primary" (click)="updatePin()" [disabled]="!oldPin || !newPin">Update PIN</button>
+        </div>
+    </div>
+
+
+
+    <!-- Data Management -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-database"></i> Data Management</div>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Backup Data</label>
+                <button class="btn btn-info" (click)="downloadBackup()">
+                    <i class="fas fa-download"></i> Download Backup
+                </button>
+            </div>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+            <div class="mb-3">
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Restore Data</label>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="file" (change)="onFileSelected($event)" accept=".json">
+                    <button class="btn btn-warning" (click)="restoreData()" [disabled]="!importFile">
+                        <i class="fas fa-upload"></i> Restore
+                    </button>
+                </div>
+            </div>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+            <div>
+                <label style="font-weight: bold; display: block; margin-bottom: 5px; color: var(--danger);">Danger
+                    Zone</label>
+                <button class="btn btn-danger" (click)="confirmClear()">
+                    <i class="fas fa-trash-alt"></i> Clear All Data
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" [class.show]="toastMessage" [class.success]="toastType==='success'"
+    [class.error]="toastType==='error'">
+    {{ toastMessage }}
+</div>
+
+<app-confirm-modal [isVisible]="isConfirmClearOpen"
+    message="Are you sure you want to delete ALL data? This cannot be undone." (confirm)="onClearConfirmed()"
+    (cancel)="isConfirmClearOpen=false">
+</app-confirm-modal>
