@@ -372,7 +372,31 @@ body {
 }
 
 /* --- Mobile Responsiveness --- */
+
+/* Tablet and smaller (under 992px) */
+@media (max-width: 992px) {
+  .card {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+}
+
+/* Mobile phones (under 768px) */
 @media (max-width: 768px) {
+  :root {
+    --sidebar-width: 60px;
+  }
+
+  body {
+    font-size: 14px;
+  }
+
   .form-row {
     flex-direction: column;
     gap: 0;
@@ -381,23 +405,188 @@ body {
   .filter-controls {
     flex-direction: column;
     align-items: stretch;
+    gap: 10px;
+  }
+
+  .filter-controls .form-group {
+    min-width: 100%;
   }
 
   .filter-controls .button-group {
-    justify-content: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
 
   .btn {
-    width: 100%;
-    margin-bottom: 5px;
+    padding: 8px 12px;
+    font-size: 13px;
   }
 
-  /* Make sure buttons in groups, headers, or actions don't stretch fully unless desired */
+  .card {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .badge {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+
+  .form-control {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  /* Stack card header on mobile */
   .card-header .btn,
   .button-group .btn,
   .table .btn {
     width: auto;
     margin-bottom: 0;
+    padding: 6px 10px;
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* Small phones (under 576px) - Optimized for 8 inch and smaller */
+@media (max-width: 576px) {
+  body {
+    font-size: 13px;
+  }
+
+  .card {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+  }
+
+  .card-header {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+  }
+
+  .btn {
+    padding: 8px 10px;
+    font-size: 12px;
+    gap: 5px;
+  }
+
+  .btn-sm {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+
+  /* Smaller table for mobile */
+  .table th,
+  .table td {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .table th {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Compact form controls */
+  .form-control {
+    padding: 8px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  /* Filter controls compact */
+  .filter-controls {
+    gap: 8px;
+  }
+
+  .filter-controls .button-group {
+    gap: 5px;
+  }
+
+  /* Badges smaller */
+  .badge {
+    padding: 2px 6px;
+    font-size: 9px;
+    border-radius: 10px;
+  }
+
+  /* Hide non-essential text on small screens */
+  .d-none-mobile {
+    display: none !important;
+  }
+
+  /* Input group compact */
+  .input-group-text {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  /* Modal adjustments */
+  .modal-content {
+    width: 95%;
+    max-height: 85vh;
+    margin: 10px;
+    border-radius: 10px;
+  }
+}
+
+/* Extra small phones (under 400px) */
+@media (max-width: 400px) {
+  body {
+    font-size: 12px;
+  }
+
+  .card {
+    padding: 8px;
+  }
+
+  .card-title {
+    font-size: 0.9rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 5px 6px;
+    font-size: 10px;
+  }
+
+  .btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .form-control {
+    padding: 6px 8px;
+    font-size: 12px;
   }
 }
 
