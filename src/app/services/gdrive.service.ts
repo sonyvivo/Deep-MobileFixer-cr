@@ -13,8 +13,8 @@ export class GDriveService {
     private readonly API_KEY = ''; // Optional: Add if using API key
     private readonly DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
     private readonly SCOPES = 'https://www.googleapis.com/auth/drive.file';
-    private readonly BACKUP_FILENAME = 'DeepMobileCRM_Backup.json';
-    private readonly BACKUP_FOLDER = 'DeepMobileCRM_Backups';
+    private readonly BACKUP_PREFIX = 'DeepMobileCRM_Backup_';
+    private readonly RETENTION_DAYS = 30; // Keep backups for 30 days
 
     private tokenClient: any = null;
     private gapiInited = false;
@@ -147,6 +147,15 @@ export class GDriveService {
         return this.isSignedInSubject.value;
     }
 
+    // Generate timestamped backup filename
+    private generateBackupFilename(): string {
+        const now = new Date();
+        const timestamp = now.toISOString()
+            .replace(/[:.]/g, '-')
+            .slice(0, 19); // Format: 2026-01-03T02-56-22
+        return `${this.BACKUP_PREFIX}${timestamp}.json`;
+    }
+
     async uploadBackup(jsonData: string): Promise<{ success: boolean; message: string }> {
         if (!this.accessToken) {
             return { success: false, message: 'Not signed in to Google Drive' };
@@ -158,59 +167,37 @@ export class GDriveService {
             // Set the access token for gapi
             gapi.client.setToken({ access_token: this.accessToken });
 
-            // Check if backup file already exists
-            const existingFile = await this.findBackupFile();
-
+            // Create new backup file with timestamp
+            const filename = this.generateBackupFilename();
             const metadata = {
-                name: this.BACKUP_FILENAME,
+                name: filename,
                 mimeType: 'application/json',
             };
 
             const form = new FormData();
             const blob = new Blob([jsonData], { type: 'application/json' });
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', blob);
 
-            if (existingFile) {
-                // Update existing file
-                const response = await fetch(
-                    `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`,
-                    {
-                        method: 'PATCH',
-                        headers: {
-                            Authorization: `Bearer ${this.accessToken}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: jsonData,
-                    }
-                );
-
-                if (response.ok) {
-                    this.isLoadingSubject.next(false);
-                    return { success: true, message: 'Backup updated successfully!' };
-                } else {
-                    throw new Error('Failed to update backup');
+            const response = await fetch(
+                'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${this.accessToken}`,
+                    },
+                    body: form,
                 }
+            );
+
+            if (response.ok) {
+                // Clean up old backups after successful upload
+                await this.deleteOldBackups();
+
+                this.isLoadingSubject.next(false);
+                return { success: true, message: `Backup created: ${filename}` };
             } else {
-                // Create new file
-                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-                form.append('file', blob);
-
-                const response = await fetch(
-                    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
-                    {
-                        method: 'POST',
-                        headers: {
-                            Authorization: `Bearer ${this.accessToken}`,
-                        },
-                        body: form,
-                    }
-                );
-
-                if (response.ok) {
-                    this.isLoadingSubject.next(false);
-                    return { success: true, message: 'Backup created successfully!' };
-                } else {
-                    throw new Error('Failed to create backup');
-                }
+                throw new Error('Failed to create backup');
             }
         } catch (error: any) {
             console.error('Backup upload error:', error);
@@ -226,19 +213,41 @@ export class GDriveService {
         }
     }
 
-    private async findBackupFile(): Promise<any | null> {
+    // Delete backups older than 30 days
+    private async deleteOldBackups(): Promise<void> {
         try {
-            const response = await gapi.client.drive.files.list({
-                q: `name='${this.BACKUP_FILENAME}' and trashed=false`,
-                fields: 'files(id, name, modifiedTime)',
-                spaces: 'drive',
-            });
+            const allBackups = await this.listBackups();
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - this.RETENTION_DAYS);
 
-            const files = response.result.files;
-            return files && files.length > 0 ? files[0] : null;
+            for (const file of allBackups) {
+                const fileDate = new Date(file.modifiedTime);
+                if (fileDate < cutoffDate) {
+                    await this.deleteFile(file.id);
+                    console.log(`Deleted old backup: ${file.name}`);
+                }
+            }
         } catch (error) {
-            console.error('Error finding backup file:', error);
-            return null;
+            console.error('Error cleaning up old backups:', error);
+        }
+    }
+
+    // Delete a file from Google Drive
+    private async deleteFile(fileId: string): Promise<boolean> {
+        try {
+            const response = await fetch(
+                `https://www.googleapis.com/drive/v3/files/${fileId}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${this.accessToken}`,
+                    },
+                }
+            );
+            return response.ok;
+        } catch (error) {
+            console.error('Error deleting file:', error);
+            return false;
         }
     }
 
@@ -251,7 +260,7 @@ export class GDriveService {
             gapi.client.setToken({ access_token: this.accessToken });
 
             const response = await gapi.client.drive.files.list({
-                q: `name contains 'DeepMobileCRM' and mimeType='application/json' and trashed=false`,
+                q: `name contains '${this.BACKUP_PREFIX}' and mimeType='application/json' and trashed=false`,
                 fields: 'files(id, name, modifiedTime, size)',
                 orderBy: 'modifiedTime desc',
                 spaces: 'drive',
